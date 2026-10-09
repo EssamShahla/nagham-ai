@@ -117,6 +117,7 @@ def structured_search_node(state: AgentState) -> dict:
         artist=analysis.get("artist"),
         difficulty=analysis.get("difficulty"),
         year=analysis.get("year"),
+        filter_groups=analysis.get("filter_groups"),
         limit=get_result_limit(state),
     )
 

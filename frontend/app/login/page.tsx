@@ -9,6 +9,12 @@ import { AuthShell } from '@/components/auth-shell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { api, ApiError, formatValidationError } from '@/lib/api'
+
+interface LoginResponse {
+  access_token: string
+  token_type: string
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,29 +31,26 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/login', {
+      const data = await api<LoginResponse>('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        body: { email, password },
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.detail || 'Login failed')
-        return
-      }
 
       localStorage.setItem('access_token', data.access_token)
 
       router.push('/dashboard')
-    } catch {
-      setError('Unable to connect to the server')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(
+          err.status === 422
+            ? formatValidationError(err.detail)
+            : typeof err.detail === 'string'
+              ? err.detail
+              : 'Login failed',
+        )
+      } else {
+        setError('Unable to connect to the server')
+      }
     } finally {
       setLoading(false)
     }

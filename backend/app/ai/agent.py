@@ -4,11 +4,7 @@ from typing import Any
 from typing import Any, Literal
 from pydantic import BaseModel
 from app.ai.semantic_search import hybrid_search_songs
-
-import ollama
-
-
-MODEL_NAME = "qwen2.5:3b"
+from app.ai.llm_client import chat as llm_chat
 
 
 class SearchFilter(BaseModel):
@@ -542,7 +538,36 @@ def enrich_intent_metadata(
             intent["artists"] = []
             intent["composers"] = []
 
-    return intent
+    # The small local LLM sometimes echoes already-structured values
+    # (artist/composer/maqam names) into semantic_query even though the
+    # prompt asks it not to. Strip them out deterministically so a pure
+    # structured request isn't misrouted into (and rejected by) semantic
+    # search just because semantic_query is non-empty.
+    structured_values = []
+
+    if intent.get("artist"):
+        structured_values.append(intent["artist"])
+
+    structured_values.extend(intent.get("artists") or [])
+    structured_values.extend(intent.get("composers") or [])
+
+    if intent.get("maqam"):
+        structured_values.append(intent["maqam"])
+
+    for group in intent.get("filter_groups") or []:
+        for search_filter in group.get("filters", []):
+            value = search_filter.get("value")
+            if isinstance(value, str):
+                structured_values.append(value)
+
+    cleaned_semantic_query = intent.get("semantic_query") or ""
+
+    for value in structured_values:
+        value = str(value).strip()
+        if value:
+            cleaned_semantic_query = cleaned_semantic_query.replace(value, "")
+
+    intent["semantic_query"] = cleaned_semantic_query.strip()
 
     return intent
 
@@ -551,14 +576,13 @@ def enrich_intent_metadata(
 
 def analyze_user_request(user_message: str) -> dict[str, Any]:
     """
-    Analyze a natural-language music request using the local Ollama LLM.
+    Analyze a natural-language music request using the configured LLM.
     """
 
     if not user_message or not user_message.strip():
         raise ValueError("User message cannot be empty")
 
-    response = ollama.chat(
-        model=MODEL_NAME,
+    content = llm_chat(
         messages=[
             {
                 "role": "system",
@@ -569,13 +593,8 @@ def analyze_user_request(user_message: str) -> dict[str, Any]:
                 "content": user_message.strip(),
             },
         ],
-        format="json",
-        options={
-            "temperature": 0,
-        },
+        json_mode=True,
     )
-
-    content = response["message"]["content"]
 
     try:
         raw_result = json.loads(content)
@@ -735,20 +754,16 @@ Retrieved context:
 Write the final answer now in Arabic only:
 """
 
-    response = ollama.chat(
-        model=MODEL_NAME,
+    content = llm_chat(
         messages=[
             {
                 "role": "user",
                 "content": prompt,
             }
         ],
-        options={
-            "temperature": 0,
-        },
     )
 
-    return response["message"]["content"].strip()
+    return content.strip()
 
 
 

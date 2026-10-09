@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, Send, Plus, MessageSquare, Loader2 } from 'lucide-react'
+import { Sparkles, Send, Plus, Loader2 } from 'lucide-react'
 import { NaghamMark } from '@/components/nagham-logo'
 import { RecommendationCard } from '@/components/assistant/recommendation-card'
-import {
-  SUGGESTED_PROMPTS,
-  PAST_CONVERSATIONS,
-  CURRENT_USER,
-} from '@/lib/mock-data'
+import { SUGGESTED_PROMPTS } from '@/lib/mock-data'
+import { useCurrentUser } from '@/components/use-current-user'
+import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 let idCounter = 0
@@ -52,6 +50,7 @@ type AssistantChatMessage = {
 
 
 export default function AssistantPage() {
+  const currentUser = useCurrentUser()
   const [messages, setMessages] = useState<AssistantChatMessage[]>([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
@@ -77,25 +76,10 @@ export default function AssistantPage() {
   setThinking(true)
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000'}/assistant`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: trimmed,
-          limit: 5,
-        }),
-      },
-    )
-
-    if (!response.ok) {
-      throw new Error(`Assistant request failed: ${response.status}`)
-    }
-
-    const data: AssistantApiResponse = await response.json()
+    const data = await api<AssistantApiResponse>('/assistant', {
+      method: 'POST',
+      body: { message: trimmed, limit: 5 },
+    })
 
     setMessages((prev) => [
       ...prev,
@@ -109,12 +93,19 @@ export default function AssistantPage() {
   } catch (error) {
     console.error('Assistant error:', error)
 
+    const content =
+      error instanceof ApiError
+        ? typeof error.detail === 'string'
+          ? error.detail
+          : 'Nagham AI ran into a problem answering that. Please try again.'
+        : 'Sorry, I could not reach Nagham AI. Please check your connection and try again.'
+
     setMessages((prev) => [
       ...prev,
       {
         id: nextId(),
         role: 'assistant',
-        content: 'Sorry, I could not reach Nagham AI. Please try again.',
+        content,
       },
     ])
   } finally {
@@ -134,30 +125,24 @@ export default function AssistantPage() {
 
   return (
     <div className="mx-auto grid h-[calc(100vh-8rem)] max-w-6xl gap-6 lg:grid-cols-[260px_1fr]">
-      {/* Conversations rail */}
+      {/* Side rail */}
       <aside className="hidden flex-col lg:flex">
         <button
           onClick={() => setMessages([])}
-          className="flex items-center gap-2 rounded-lg border border-gold/25 bg-gold-muted px-3 py-2.5 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-gold-foreground"
+          disabled={empty}
+          className="flex items-center gap-2 rounded-lg border border-gold/25 bg-gold-muted px-3 py-2.5 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-gold-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="size-4" /> New conversation
         </button>
         <p className="mt-6 mb-2 px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Recent
+          How Nagham searches
         </p>
-        <div className="flex flex-col gap-1 overflow-y-auto">
-          {PAST_CONVERSATIONS.map((c) => (
-            <button
-              key={c.id}
-              className="flex items-start gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <MessageSquare className="mt-0.5 size-4 shrink-0" />
-              <span className="min-w-0">
-                <span className="block truncate">{c.title}</span>
-                <span className="text-xs text-muted-foreground/70">{c.time}</span>
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-col gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground">
+          <p>
+            Nagham reads your request, then chooses structured search (artist, maqam, year),
+            semantic search (meaning and mood), or a hybrid of both before answering.
+          </p>
+          <p>Conversations are not saved between visits — each session starts fresh.</p>
         </div>
       </aside>
 
@@ -187,7 +172,7 @@ export default function AssistantPage() {
           ) : (
             <div className="flex flex-col gap-6">
               {messages.map((m) => (
-                <Message key={m.id} message={m} />
+                <Message key={m.id} message={m} userName={currentUser.data?.name ?? null} />
               ))}
               {thinking && (
                 <div className="flex items-center gap-3">
@@ -238,12 +223,23 @@ export default function AssistantPage() {
   )
 }
 
-function Message({ message }: { message: AssistantChatMessage }) {
+function Message({
+  message,
+  userName,
+}: {
+  message: AssistantChatMessage
+  userName: string | null
+}) {
   if (message.role === 'user') {
-    const initials = CURRENT_USER.name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
+    const initials = userName
+      ? userName
+          .split(' ')
+          .filter(Boolean)
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase()
+      : 'You'.slice(0, 2)
     return (
       <div className="flex items-start justify-end gap-3">
         <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary px-4 py-2.5 text-sm text-secondary-foreground">

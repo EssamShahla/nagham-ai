@@ -12,6 +12,7 @@ from app.models.song import Song
 from app.models.song_maqam import SongMaqam
 from app.models.song_source import SongSource
 from app.models.otp_verification import OTPVerification
+from app.ai.semantic_search import apply_filter_groups
 
 
 def structured_search_songs(
@@ -20,6 +21,7 @@ def structured_search_songs(
     artist: Optional[str] = None,
     difficulty: Optional[str] = None,
     year: Optional[int] = None,
+    filter_groups: Optional[list] = None,
     limit: int = 10,
 ):
     """
@@ -61,6 +63,8 @@ def structured_search_songs(
 
     if year is not None:
         query = query.filter(Song.year == year)
+
+    query = apply_filter_groups(query, filter_groups)
 
     songs = (
         query

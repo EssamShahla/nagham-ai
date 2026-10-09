@@ -7,6 +7,8 @@ import { MailCheck } from 'lucide-react'
 
 import { AuthShell } from '@/components/auth-shell'
 import { cn } from '@/lib/utils'
+import { api, ApiError } from '@/lib/api'
+import type { UserResponse } from '@/lib/types'
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -105,35 +107,18 @@ export default function VerifyPage() {
     const otp = digits.join('')
 
     try {
-      const response = await fetch(
-        'http://127.0.0.1:8000/auth/verify-otp',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            otp,
-          }),
-        }
-      )
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          result.detail || 'Verification failed'
-        )
-      }
+      await api<UserResponse>('/auth/verify-otp', {
+        method: 'POST',
+        body: { email, otp },
+      })
 
       localStorage.removeItem('verification_email')
 
       router.push('/login')
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
+        err instanceof ApiError && typeof err.detail === 'string'
+          ? err.detail
           : 'Something went wrong. Please try again.'
       )
     } finally {
@@ -149,50 +134,28 @@ export default function VerifyPage() {
     setMessage('')
 
     try {
-      const response = await fetch(
-        'http://127.0.0.1:8000/auth/resend-otp',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-          }),
-        }
-      )
-
-      const result = await response.json()
-
-      if (response.status === 429) {
-        const remainingSeconds =
-          result.detail?.remaining_seconds ||
-          result.remaining_seconds ||
-          60
-
-        setCooldown(remainingSeconds)
-
-        throw new Error(
-          `Please wait ${remainingSeconds} seconds before requesting another code.`
-        )
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          result.detail || 'Failed to resend verification code'
-        )
-      }
+      await api('/auth/resend-otp', {
+        method: 'POST',
+        body: { email },
+      })
 
       setMessage('A new verification code has been sent.')
       setCooldown(60)
       setDigits(Array(6).fill(''))
       inputs.current[0]?.focus()
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong. Please try again.'
-      )
+      if (err instanceof ApiError && err.status === 429) {
+        const detailText = typeof err.detail === 'string' ? err.detail : ''
+        const match = detailText.match(/(\d+)/)
+        const remainingSeconds = match ? Number(match[1]) : 60
+
+        setCooldown(remainingSeconds)
+        setError(`Please wait ${remainingSeconds} seconds before requesting another code.`)
+      } else if (err instanceof ApiError && typeof err.detail === 'string') {
+        setError(err.detail)
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
     } finally {
       setResending(false)
     }

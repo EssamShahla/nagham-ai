@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { api, ApiError, formatValidationError } from "@/lib/api"
+import type { UserResponse } from "@/lib/types"
 
 const INSTRUMENTS = [
   "Oud",
@@ -56,24 +58,10 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      )
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          result.detail || "Registration failed"
-        )
-      }
+      await api<UserResponse>("/auth/register", {
+        method: "POST",
+        body: data,
+      })
 
       // Save the email temporarily so the verification
       // page knows which account should be verified.
@@ -84,11 +72,17 @@ export default function RegisterPage() {
 
       router.push("/verify")
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      )
+      if (err instanceof ApiError) {
+        setError(
+          err.status === 422
+            ? formatValidationError(err.detail)
+            : typeof err.detail === "string"
+              ? err.detail
+              : "Registration failed"
+        )
+      } else {
+        setError("Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }

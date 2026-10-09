@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from sqlalchemy import text
 
@@ -21,12 +23,20 @@ from app.routers.assistant import router as assistant_router
 app = FastAPI(
     title="Nagham AI API"
 )
+
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+extra_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+cors_origins = DEFAULT_CORS_ORIGINS + [
+    origin.strip() for origin in extra_origins.split(",") if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

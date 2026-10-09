@@ -8,6 +8,7 @@ from app.database.connection import get_db
 from app.schemas.user import (
     UserRegister,
     UserLogin,
+    UserUpdate,
     OTPVerify,
     UserResponse,
     ResendOTPRequest
@@ -161,6 +162,32 @@ def login(
 def get_me(
     current_user: User = Depends(get_current_user)
 ):
+    return current_user
+
+
+# ============================================================
+# UPDATE CURRENT USER
+# PATCH /auth/me
+# Protected endpoint that lets the authenticated user update
+# their own profile fields.
+# ============================================================
+@router.patch(
+    "/me",
+    response_model=UserResponse
+)
+def update_me(
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    updates = user_data.model_dump(exclude_unset=True)
+
+    for field, value in updates.items():
+        setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+
     return current_user
 
 

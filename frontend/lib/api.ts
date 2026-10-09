@@ -14,6 +14,8 @@ export interface ApiOptions {
   query?: QueryParams
   auth?: boolean
   headers?: HeadersInit
+  signal?: AbortSignal
+  cache?: RequestCache
 }
 
 export class ApiError extends Error {
@@ -66,7 +68,7 @@ function getAccessToken(): string | null {
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body, query, auth = false, headers } = options
+  const { method = "GET", body, query, auth = false, headers, signal, cache } = options
 
   const requestHeaders: Record<string, string> = {}
 
@@ -89,6 +91,8 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     method,
     headers: requestHeaders,
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
+    cache,
   })
 
   if (response.status === 204) {

@@ -217,6 +217,7 @@ def get_songs(
     maqam_id: Optional[int] = Query(default=None),
     difficulty: Optional[SongDifficulty] = Query(default=None),
     year: Optional[int] = Query(default=None),
+    created_by: Optional[int] = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db)
@@ -246,6 +247,9 @@ def get_songs(
 
     if year is not None:
         query = query.filter(Song.year == year)
+
+    if created_by is not None:
+        query = query.filter(Song.created_by == created_by)
 
     total = query.count()
     pages = math.ceil(total / page_size)

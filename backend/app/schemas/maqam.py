@@ -2,6 +2,8 @@ from typing import Optional, Literal
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.ajnas import JinsResponse
+
 MAX_SCALE_INTERVAL = 4.0
 
 
@@ -68,6 +70,8 @@ class MaqamResponse(BaseModel):
 
     root_jins_id: Optional[int] = None
     branch_jins_id: Optional[int] = None
+    root_jins: Optional[JinsResponse] = None
+    branch_jins: Optional[JinsResponse] = None
 
     ghammaz: Optional[str] = None
     mood: Optional[str] = None

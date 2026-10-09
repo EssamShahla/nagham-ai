@@ -4,6 +4,9 @@ export interface SongResponse {
   id: number
   title: string
   lyrics: string | null
+  description: string | null
+  moods: string[] | null
+  topics: string[] | null
   year: number | null
   difficulty: SongDifficulty | null
   artist_id: number
@@ -15,6 +18,25 @@ export interface SongResponse {
   maqam_id: number | null
   maqam_name: string | null
   created_by: number
+}
+
+export interface SemanticSearchResult {
+  id: number
+  title: string
+  artist_id: number
+  artist_name: string | null
+  description: string | null
+  moods: string[] | null
+  topics: string[] | null
+  maqam_id: number | null
+  maqam_name: string | null
+  similarity: number
+}
+
+export interface SemanticSearchResponse {
+  query: string
+  count: number
+  results: SemanticSearchResult[]
 }
 
 export interface SongListResponse {
@@ -58,6 +80,17 @@ export interface ComposerResponse {
   bio: string | null
 }
 
+export interface JinsResponse {
+  id: number
+  name_ar: string
+  name_en: string | null
+  tonic: string | null
+  accidentals: string | null
+  scale_pattern: number[] | null
+  description: string | null
+  notes: string | null
+}
+
 export interface MaqamResponse {
   id: number
   name_ar: string
@@ -67,6 +100,8 @@ export interface MaqamResponse {
   scale_pattern: number[] | null
   root_jins_id: number | null
   branch_jins_id: number | null
+  root_jins: JinsResponse | null
+  branch_jins: JinsResponse | null
   ghammaz: string | null
   mood: string | null
   notation_format: string

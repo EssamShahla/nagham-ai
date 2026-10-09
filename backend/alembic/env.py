@@ -42,6 +42,7 @@ from app.models.rhythm import Rhythm
 from app.models.otp_verification import OTPVerification
 from app.models.song import Song
 from app.models.song_maqam import SongMaqam
+from app.models.song_section import SongSection
 from app.models.song_source import SongSource
 
 target_metadata = Base.metadata

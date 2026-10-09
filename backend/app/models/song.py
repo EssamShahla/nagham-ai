@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 
 from app.database.base import Base
+from app.models.song_section import SongSection  # noqa: F401  (registers mapper for the lazy "SongSection" relationship string)
 
 
 class Song(Base):
@@ -95,6 +96,13 @@ class Song(Base):
     rhythm = relationship("Rhythm")
 
     maqam = relationship("Maqam")
+
+    sections = relationship(
+        "SongSection",
+        order_by="SongSection.sequence_order",
+        passive_deletes=True,
+        back_populates="song"
+    )
 
     sources = relationship(
         "SongSource",
