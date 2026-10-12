@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Sparkles, Send, Plus, Loader2 } from 'lucide-react'
 import { NaghamMark } from '@/components/nagham-logo'
 import { RecommendationCard } from '@/components/assistant/recommendation-card'
@@ -45,9 +46,52 @@ type AssistantChatMessage = {
   role: 'user' | 'assistant'
   content: string
   songs?: AssistantSong[]
+  // Carried only on assistant turns, and only so the *next* request's
+  // `history` entry for this turn can reproduce what the backend needs
+  // (app/schemas/assistant.py's ConversationTurn) -- follow-up/recommend
+  // -similar routing on the backend keys off `result_ids` specifically.
+  analysis?: AssistantApiResponse['analysis']
+  resultIds?: number[]
+}
+
+type ConversationTurn = {
+  role: 'user' | 'assistant'
+  content: string
+  analysis?: AssistantApiResponse['analysis'] | null
+  result_ids?: number[] | null
+}
+
+// Backend forwards this unmodified into the LangGraph's `history` state --
+// nothing is persisted server-side, so this cap only bounds prompt size for
+// a single long-running session, not memory lifetime.
+const MAX_HISTORY_MESSAGES = 20
+
+function toHistory(messages: AssistantChatMessage[]): ConversationTurn[] {
+  return messages.slice(-MAX_HISTORY_MESSAGES).map((m) => ({
+    role: m.role,
+    content: m.content,
+    analysis: m.role === 'assistant' ? m.analysis ?? null : null,
+    result_ids: m.role === 'assistant' ? m.resultIds ?? null : null,
+  }))
 }
 
 
+
+/** Reads ?q= once on mount to prefill a question (e.g. from "Ask Nagham AI
+ * about this maqam" links). Isolated in its own component because
+ * `useSearchParams` requires a Suspense boundary to avoid opting the whole
+ * page out of static prerendering. */
+function InitialQueryReader({ onInitialQuery }: { onInitialQuery: (q: string) => void }) {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const initial = searchParams.get('q')
+    if (initial && initial.trim()) onInitialQuery(initial.trim())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return null
+}
 
 export default function AssistantPage() {
   const currentUser = useCurrentUser()
@@ -55,6 +99,7 @@ export default function AssistantPage() {
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const sentInitialRef = useRef(false)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -71,6 +116,11 @@ export default function AssistantPage() {
     content: trimmed,
   }
 
+  // Captured from state as of this call, i.e. everything before this new
+  // user turn -- the backend session has no memory of its own, so this is
+  // the only thing that makes follow-ups ("من هالاغاني اختار الأسهل") work.
+  const historyTurns = toHistory(messages)
+
   setMessages((prev) => [...prev, userMsg])
   setInput('')
   setThinking(true)
@@ -78,7 +128,11 @@ export default function AssistantPage() {
   try {
     const data = await api<AssistantApiResponse>('/assistant', {
       method: 'POST',
-      body: { message: trimmed, limit: 5 },
+      body: { message: trimmed, limit: 5, history: historyTurns },
+      // Attaches the JWT when the user is logged in; anonymous users keep
+      // full search/theory/lyrics access -- only the song-creation
+      // sub-flow actually requires a token (app/ai/song_creation.py).
+      auth: true,
     })
 
     setMessages((prev) => [
@@ -88,6 +142,8 @@ export default function AssistantPage() {
         role: 'assistant',
         content: data.answer,
         songs: data.results,
+        analysis: data.analysis,
+        resultIds: data.results.map((s) => s.id),
       },
     ])
   } catch (error) {
@@ -125,6 +181,16 @@ export default function AssistantPage() {
 
   return (
     <div className="mx-auto grid h-[calc(100vh-8rem)] max-w-6xl gap-6 lg:grid-cols-[260px_1fr]">
+      <Suspense fallback={null}>
+        <InitialQueryReader
+          onInitialQuery={(q) => {
+            if (sentInitialRef.current) return
+            sentInitialRef.current = true
+            send(q)
+          }}
+        />
+      </Suspense>
+
       {/* Side rail */}
       <aside className="hidden flex-col lg:flex">
         <button

@@ -13,6 +13,7 @@ import {
   Guitar,
   CalendarClock,
   Loader2,
+  Link2,
 } from 'lucide-react'
 import { api, ApiError, formatValidationError } from '@/lib/api'
 import type { SongListResponse, SongResponse, UserResponse } from '@/lib/types'
@@ -55,6 +56,9 @@ export default function ProfilePage() {
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  const [connectingGoogle, setConnectingGoogle] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
 
   const [contributions, setContributions] = useState<SongResponse[]>([])
   const [contributionsTotal, setContributionsTotal] = useState<number | null>(null)
@@ -134,6 +138,28 @@ export default function ProfilePage() {
           : '—',
     },
   ]
+
+  async function connectGoogle() {
+    if (connectingGoogle) return
+    setConnectingGoogle(true)
+    setConnectError(null)
+
+    try {
+      const data = await api<{ authorize_url: string }>('/auth/google/link/start', {
+        auth: true,
+      })
+      // Full top-level navigation to Google -- not a fetch -- so the
+      // authorize_url itself never needs to be treated as sensitive.
+      window.location.href = data.authorize_url
+    } catch (err) {
+      setConnectError(
+        err instanceof ApiError && typeof err.detail === 'string'
+          ? err.detail
+          : 'Could not start Google linking. Please try again.',
+      )
+      setConnectingGoogle(false)
+    }
+  }
 
   function startEditing() {
     if (!user) return
@@ -324,6 +350,42 @@ export default function ProfilePage() {
               {user.bio || 'No bio yet.'}
             </p>
           </>
+        )}
+      </div>
+
+      {/* Connected accounts */}
+      <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+        <h2 className="font-display text-xl font-semibold">Connected accounts</h2>
+
+        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-border bg-background/40 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-lg border border-gold/25 bg-gold-muted text-gold">
+              <Link2 className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-medium">Google</p>
+              <p className="text-xs text-muted-foreground">
+                {user.google_linked
+                  ? 'Your account is linked. You can sign in with Google.'
+                  : 'Not connected.'}
+              </p>
+            </div>
+          </div>
+
+          {!user.google_linked && (
+            <button
+              onClick={connectGoogle}
+              disabled={connectingGoogle}
+              className="flex items-center gap-2 rounded-lg border border-gold/30 bg-gold-muted px-4 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-gold-foreground disabled:opacity-50"
+            >
+              {connectingGoogle ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
+              Connect
+            </button>
+          )}
+        </div>
+
+        {connectError && (
+          <p className="mt-3 text-sm text-red-500">{connectError}</p>
         )}
       </div>
 

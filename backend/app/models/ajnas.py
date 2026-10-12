@@ -41,6 +41,13 @@ class Jins(Base):
         nullable=True
     )
 
+    # Ordered note name per degree (including octave), e.g.
+    # ["Dugah (D)", "Sikah (half-flat E)", "Jaharkah (F)", "(Gb)"].
+    degree_names = Column(
+        JSON,
+        nullable=True
+    )
+
     description = Column(
         Text,
         nullable=True

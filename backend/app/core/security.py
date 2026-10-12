@@ -111,6 +111,7 @@ def decode_access_token(token: str):
     
 
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -139,6 +140,28 @@ def get_current_user(
         )
 
     return user
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_optional),
+    db: Session = Depends(get_db),
+):
+    """
+    Like `get_current_user`, but returns `None` instead of raising when no
+    (or an invalid/expired) bearer token is present. For endpoints like
+    `/assistant` that must stay usable anonymously for most intents, while
+    a specific mutating sub-flow (song creation) still needs to know who
+    -- if anyone -- is authenticated.
+    """
+
+    if credentials is None:
+        return None
+
+    user_id = decode_access_token(credentials.credentials)
+    if user_id is None:
+        return None
+
+    return db.query(User).filter(User.id == user_id).first()
 
 
 from app.models.user import User

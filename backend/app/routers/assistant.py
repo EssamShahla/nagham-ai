@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.ai.graph import nagham_graph
+from app.core.security import get_current_user_optional
+from app.models.user import User
 from app.schemas.assistant import (
     AssistantRequest,
     AssistantResponse,
@@ -20,13 +22,19 @@ router = APIRouter(
 def chat_with_assistant(
     request: AssistantRequest,
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
-    # Run the complete LangGraph agent
+    # Run the complete LangGraph agent. Auth is optional here -- search,
+    # theory, and lyrics intents all stay usable anonymously; only the
+    # song-creation workflow (app/ai/song_creation.py) requires
+    # `current_user` to be set, since a write needs a real `created_by`.
     graph_result = nagham_graph.invoke(
         {
             "user_message": request.message,
             "db": db,
             "limit": request.limit,
+            "history": [turn.model_dump() for turn in request.history],
+            "current_user": current_user,
         }
     )
 

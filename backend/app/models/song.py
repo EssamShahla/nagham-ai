@@ -25,6 +25,36 @@ class Song(Base):
         Text,
         nullable=True
     )
+
+    # Whether `lyrics` may ever be displayed verbatim: "public_domain" |
+    # "licensed" | "restricted". NULL/unrecognized is always treated as
+    # restricted by application code -- display rights are never assumed.
+    # `lyrics` itself is kept regardless of license for semantic-search
+    # embeddings (see app/ai/semantic_search.py:build_song_embedding_text).
+    lyrics_license = Column(
+        String(30),
+        nullable=True
+    )
+
+    lyrics_rights_note = Column(
+        Text,
+        nullable=True
+    )
+
+    # Free-text, unresolved against any catalog table (unlike artist/
+    # composer/maqam/rhythm) -- a song's lyricist and the specific
+    # performed tonic/key, which can differ per song even within the
+    # same maqam.
+    lyricist_name = Column(
+        String(255),
+        nullable=True
+    )
+
+    musical_key = Column(
+        String(100),
+        nullable=True
+    )
+
     description = Column(
         Text,
         nullable=True

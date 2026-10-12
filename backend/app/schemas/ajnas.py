@@ -13,6 +13,7 @@ class JinsCreate(BaseModel):
     accidentals: Optional[str] = None
 
     scale_pattern: Optional[list[float]] = None
+    degree_names: Optional[list[str]] = None
 
     description: Optional[str] = None
     notes: Optional[str] = None
@@ -54,6 +55,7 @@ class JinsResponse(BaseModel):
     accidentals: Optional[str] = None
 
     scale_pattern: Optional[list[float]] = None
+    degree_names: Optional[list[str]] = None
 
     description: Optional[str] = None
     notes: Optional[str] = None

@@ -115,6 +115,7 @@ def create_maqam(
         accidentals=maqam_data.accidentals,
 
         scale_pattern=maqam_data.scale_pattern,
+        degree_names=maqam_data.degree_names,
 
         root_jins_id=maqam_data.root_jins_id,
         branch_jins_id=maqam_data.branch_jins_id,

@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { GoogleButton } from "@/components/auth/google-button"
+import { AuthDivider } from "@/components/auth/auth-divider"
 import { api, ApiError, formatValidationError } from "@/lib/api"
 import type { UserResponse } from "@/lib/types"
 
@@ -103,9 +105,15 @@ export default function RegisterPage() {
         Join the community and start discovering repertoire.
       </p>
 
+      <div className="mt-8">
+        <GoogleButton label="Sign up with Google" />
+      </div>
+
+      <AuthDivider />
+
       <form
         onSubmit={handleRegister}
-        className="mt-8 flex flex-col gap-5"
+        className="flex flex-col gap-5"
       >
         {/* Full name */}
         <div>

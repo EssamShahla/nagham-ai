@@ -48,6 +48,14 @@ class Maqam(Base):
         nullable=True
     )
 
+    # Ordered note name per scale degree (including the octave), e.g.
+    # ["Dugah (D)", "Sikah (half-flat E)", ...]. One more entry than
+    # scale_pattern has intervals. Null until verified -- never invented.
+    degree_names = Column(
+        JSON,
+        nullable=True
+    )
+
     root_jins_id = Column(
         Integer,
         ForeignKey("ajnas.id"),
@@ -109,4 +117,11 @@ class Maqam(Base):
     branch_jins = relationship(
         "Jins",
         foreign_keys=[branch_jins_id]
+    )
+
+    # Full ordered ajnas breakdown (see app.models.maqam_jins.MaqamJins).
+    ajnas_breakdown = relationship(
+        "MaqamJins",
+        back_populates="maqam",
+        order_by="MaqamJins.start_degree",
     )

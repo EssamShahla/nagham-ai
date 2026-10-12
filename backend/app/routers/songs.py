@@ -4,14 +4,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
 
 from app.database.connection import get_db
 from app.models.song import Song
-from app.models.artist import Artist
-from app.models.composer import Composer
-from app.models.rhythm import Rhythm
-from app.models.maqam import Maqam
 from app.models.user import User
 from app.schemas.song import (
     SongCreate,
@@ -21,9 +16,19 @@ from app.schemas.song import (
     SongDifficulty,
 )
 from app.core.security import get_current_user
-from app.ai.semantic_search import (
-    build_song_embedding_text,
-    generate_embedding,
+from app.services.song_service import (
+    ArtistNotFoundError,
+    ComposerNotFoundError,
+    RhythmNotFoundError,
+    MaqamNotFoundError,
+    DuplicateSongError,
+    create_song_and_embed,
+    ensure_artist_exists,
+    ensure_composer_exists,
+    ensure_rhythm_exists,
+    ensure_maqam_exists,
+    find_duplicate_song,
+    regenerate_song_embedding,
 )
 
 
@@ -55,98 +60,12 @@ def _get_song_or_404(db: Session, song_id: int) -> Song:
     return song
 
 
-def _ensure_artist_exists(db: Session, artist_id: int) -> None:
-    artist = db.query(Artist).filter(Artist.id == artist_id).first()
-
-    if not artist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Artist not found"
-        )
-
-
-def _ensure_composer_exists(db: Session, composer_id: int) -> None:
-    composer = db.query(Composer).filter(Composer.id == composer_id).first()
-
-    if not composer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Composer not found"
-        )
-
-
-def _ensure_rhythm_exists(db: Session, rhythm_id: int) -> None:
-    rhythm = db.query(Rhythm).filter(Rhythm.id == rhythm_id).first()
-
-    if not rhythm:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Rhythm not found"
-        )
-
-
-def _ensure_maqam_exists(db: Session, maqam_id: int) -> None:
-    maqam = db.query(Maqam).filter(Maqam.id == maqam_id).first()
-
-    if not maqam:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Maqam not found"
-        )
-
-
-def _find_duplicate_song(
-    db: Session,
-    title: str,
-    artist_id: int,
-    exclude_id: Optional[int] = None
-):
-    query = db.query(Song).filter(
-        func.lower(Song.title) == title.lower(),
-        Song.artist_id == artist_id
-    )
-
-    if exclude_id is not None:
-        query = query.filter(Song.id != exclude_id)
-
-    return query.first()
-
-
 def _ensure_can_manage_song(song: Song, current_user: User) -> None:
     if song.created_by != current_user.id and current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to modify this song"
         )
-
-
-
-def _generate_song_embedding(db: Session, song: Song) -> None:
-    """
-    Generate and assign the semantic embedding for a song.
-    """
-
-    # Make sure pending FK/data changes are synchronized with the DB
-    db.flush()
-
-    # Reload relationships used when building the embedding text
-    db.refresh(song)
-
-    song = (
-        db.query(Song)
-        .options(
-            joinedload(Song.artist),
-            joinedload(Song.composer),
-            joinedload(Song.rhythm),
-            joinedload(Song.maqam),
-        )
-        .filter(Song.id == song.id)
-        .one()
-    )
-
-    embedding_text = build_song_embedding_text(song)
-    song.embedding = generate_embedding(embedding_text)
-
 
 
 @router.post(
@@ -159,50 +78,36 @@ def create_song(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    _ensure_artist_exists(db, song_data.artist_id)
-
-    if song_data.composer_id is not None:
-        _ensure_composer_exists(db, song_data.composer_id)
-
-    if song_data.rhythm_id is not None:
-        _ensure_rhythm_exists(db, song_data.rhythm_id)
-
-    if song_data.maqam_id is not None:
-        _ensure_maqam_exists(db, song_data.maqam_id)
-
-    if _find_duplicate_song(db, song_data.title, song_data.artist_id):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Song already exists"
+    try:
+        return create_song_and_embed(
+            db,
+            title=song_data.title,
+            artist_id=song_data.artist_id,
+            composer_id=song_data.composer_id,
+            rhythm_id=song_data.rhythm_id,
+            maqam_id=song_data.maqam_id,
+            lyrics=song_data.lyrics.strip() if song_data.lyrics else None,
+            description=(
+                song_data.description.strip()
+                if song_data.description
+                else None
+            ),
+            moods=song_data.moods,
+            topics=song_data.topics,
+            year=song_data.year,
+            difficulty=song_data.difficulty,
+            created_by=current_user.id,
         )
-
-    new_song = Song(
-        title=song_data.title,
-        lyrics=song_data.lyrics.strip() if song_data.lyrics else None,
-        description=(
-            song_data.description.strip()
-            if song_data.description
-            else None
-        ),
-        moods=song_data.moods,
-        topics=song_data.topics,
-        year=song_data.year,
-        difficulty=song_data.difficulty,
-        artist_id=song_data.artist_id,
-        composer_id=song_data.composer_id,
-        rhythm_id=song_data.rhythm_id,
-        maqam_id=song_data.maqam_id,
-        created_by=current_user.id
-    )
-
-    db.add(new_song)
-
-    _generate_song_embedding(db, new_song)
-
-    db.commit()
-    db.refresh(new_song)
-
-    return new_song
+    except ArtistNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
+    except ComposerNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Composer not found")
+    except RhythmNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rhythm not found")
+    except MaqamNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Maqam not found")
+    except DuplicateSongError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Song already exists")
 
 
 @router.get(
@@ -317,32 +222,41 @@ def update_song(
         embedding_fields.intersection(updates.keys())
     )
 
-    if "artist_id" in updates:
-        _ensure_artist_exists(db, updates["artist_id"])
+    try:
+        if "artist_id" in updates:
+            ensure_artist_exists(db, updates["artist_id"])
 
-    if (
-        "composer_id" in updates
-        and updates["composer_id"] is not None
-    ):
-        _ensure_composer_exists(db, updates["composer_id"])
+        if (
+            "composer_id" in updates
+            and updates["composer_id"] is not None
+        ):
+            ensure_composer_exists(db, updates["composer_id"])
 
-    if (
-        "rhythm_id" in updates
-        and updates["rhythm_id"] is not None
-    ):
-        _ensure_rhythm_exists(db, updates["rhythm_id"])
+        if (
+            "rhythm_id" in updates
+            and updates["rhythm_id"] is not None
+        ):
+            ensure_rhythm_exists(db, updates["rhythm_id"])
 
-    if (
-        "maqam_id" in updates
-        and updates["maqam_id"] is not None
-    ):
-        _ensure_maqam_exists(db, updates["maqam_id"])
+        if (
+            "maqam_id" in updates
+            and updates["maqam_id"] is not None
+        ):
+            ensure_maqam_exists(db, updates["maqam_id"])
+    except ArtistNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
+    except ComposerNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Composer not found")
+    except RhythmNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rhythm not found")
+    except MaqamNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Maqam not found")
 
     if "title" in updates or "artist_id" in updates:
         prospective_title = updates.get("title", song.title)
         prospective_artist_id = updates.get("artist_id", song.artist_id)
 
-        if _find_duplicate_song(
+        if find_duplicate_song(
             db,
             prospective_title,
             prospective_artist_id,
@@ -395,7 +309,7 @@ def update_song(
         song.maqam_id = updates["maqam_id"]
 
     if should_regenerate_embedding:
-        _generate_song_embedding(db, song)
+        regenerate_song_embedding(db, song)
 
     db.commit()
     db.refresh(song)

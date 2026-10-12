@@ -2,9 +2,23 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class ConversationTurn(BaseModel):
+    """
+    One turn of prior conversation. The client (frontend or eval harness)
+    holds the conversation and resends recent turns with each request --
+    nothing here is persisted server-side. See app/ai/conversation.py.
+    """
+
+    role: str
+    content: str
+    analysis: dict[str, Any] | None = None
+    result_ids: list[int] | None = None
+
+
 class AssistantRequest(BaseModel):
     message: str = Field(..., min_length=1)
     limit: int = Field(default=5, ge=1, le=10)
+    history: list[ConversationTurn] = Field(default_factory=list)
 
 
 class AssistantSongResult(BaseModel):

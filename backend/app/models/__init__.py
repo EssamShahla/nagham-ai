@@ -14,9 +14,14 @@ circular-import chains between database and models.
 from app.models.ajnas import Jins
 from app.models.artist import Artist
 from app.models.composer import Composer
+from app.models.login_exchange_code import LoginExchangeCode
 from app.models.rhythm import Rhythm
 from app.models.maqam import Maqam
+from app.models.maqam_jins import MaqamJins
+from app.models.oauth_state import OAuthState
 from app.models.otp_verification import OTPVerification
+from app.models.pending_google_link import PendingGoogleLink
+from app.models.pending_song_creation import PendingSongCreation
 from app.models.song import Song
 from app.models.song_maqam import SongMaqam
 from app.models.song_section import SongSection
@@ -27,9 +32,14 @@ __all__ = [
     "Jins",
     "Artist",
     "Composer",
+    "LoginExchangeCode",
     "Rhythm",
     "Maqam",
+    "MaqamJins",
+    "OAuthState",
     "OTPVerification",
+    "PendingGoogleLink",
+    "PendingSongCreation",
     "Song",
     "SongMaqam",
     "SongSection",

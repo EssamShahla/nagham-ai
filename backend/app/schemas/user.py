@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserRegister(BaseModel):
@@ -64,6 +64,7 @@ class UserResponse(BaseModel):
     is_verified: bool
     profile_completed: bool
     auth_provider: str
+    google_linked: bool
     role: str
 
     class Config:
@@ -72,3 +73,13 @@ class UserResponse(BaseModel):
     
 class ResendOTPRequest(BaseModel):
     email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str = Field(min_length=6)

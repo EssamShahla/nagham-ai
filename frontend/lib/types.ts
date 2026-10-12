@@ -87,7 +87,15 @@ export interface JinsResponse {
   tonic: string | null
   accidentals: string | null
   scale_pattern: number[] | null
+  degree_names: string[] | null
   description: string | null
+  notes: string | null
+}
+
+export interface MaqamJinsBreakdownEntry {
+  start_degree: number
+  is_primary_alternative: boolean
+  jins: JinsResponse
   notes: string | null
 }
 
@@ -98,6 +106,7 @@ export interface MaqamResponse {
   tonic: string | null
   accidentals: string | null
   scale_pattern: number[] | null
+  degree_names: string[] | null
   root_jins_id: number | null
   branch_jins_id: number | null
   root_jins: JinsResponse | null
@@ -107,6 +116,7 @@ export interface MaqamResponse {
   notation_format: string
   musicxml_data: string | null
   audio_sample_url: string | null
+  ajnas_breakdown: MaqamJinsBreakdownEntry[]
   description: string | null
   notes: string | null
 }
@@ -139,5 +149,6 @@ export interface UserResponse {
   is_verified: boolean
   profile_completed: boolean
   auth_provider: string
+  google_linked: boolean
   role: string
 }

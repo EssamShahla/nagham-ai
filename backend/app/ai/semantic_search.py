@@ -216,13 +216,54 @@ def semantic_search_songs(
     return relevant_results[:limit]
     
     
+def _read_field_value(search_filter):
+    """Supports both Pydantic objects and plain dictionaries."""
+
+    field = (
+        search_filter.field
+        if hasattr(search_filter, "field")
+        else search_filter.get("field")
+    )
+
+    value = (
+        search_filter.value
+        if hasattr(search_filter, "value")
+        else search_filter.get("value")
+    )
+
+    return field, value
+
+
+def _build_filter_condition(field, value):
+    """Build a single SQLAlchemy condition for one (field, value) pair, or
+    None when the field/value combination can't produce a valid condition."""
+
+    if field == "artist":
+        return Song.artist.has(Artist.name_ar.ilike(str(value).strip()))
+
+    if field == "composer":
+        return Song.composer.has(Composer.name_ar.ilike(str(value).strip()))
+
+    if field == "maqam":
+        return Song.maqam.has(Maqam.name_ar.ilike(str(value).strip()))
+
+    if field == "difficulty":
+        return Song.difficulty.ilike(str(value).strip())
+
+    if field == "year":
+        try:
+            return Song.year == int(value)
+        except (TypeError, ValueError):
+            return None
+
+    return None
+
+
 def apply_filter_groups(query, filter_groups):
     if not filter_groups:
         return query
 
     for group in filter_groups:
-        conditions = []
-
         # Supports both Pydantic objects and dictionaries
         operator = (
             group.operator
@@ -236,52 +277,12 @@ def apply_filter_groups(query, filter_groups):
             else group.get("filters", [])
         )
 
+        conditions = []
         for search_filter in filters:
-            field = (
-                search_filter.field
-                if hasattr(search_filter, "field")
-                else search_filter.get("field")
-            )
-
-            value = (
-                search_filter.value
-                if hasattr(search_filter, "value")
-                else search_filter.get("value")
-            )
-
-            if field == "artist":
-                conditions.append(
-                    Song.artist.has(
-                        Artist.name_ar.ilike(str(value).strip())
-                    )
-                )
-
-            elif field == "composer":
-                conditions.append(
-                    Song.composer.has(
-                        Composer.name_ar.ilike(str(value).strip())
-                    )
-                )
-
-            elif field == "maqam":
-                conditions.append(
-                    Song.maqam.has(
-                        Maqam.name_ar.ilike(str(value).strip())
-                    )
-                )
-
-            elif field == "difficulty":
-                conditions.append(
-                    Song.difficulty.ilike(str(value).strip())
-                )
-
-            elif field == "year":
-                try:
-                    conditions.append(
-                        Song.year == int(value)
-                    )
-                except (TypeError, ValueError):
-                    continue
+            field, value = _read_field_value(search_filter)
+            condition = _build_filter_condition(field, value)
+            if condition is not None:
+                conditions.append(condition)
 
         if not conditions:
             continue
@@ -293,7 +294,26 @@ def apply_filter_groups(query, filter_groups):
 
     return query
 
-    
+
+def apply_exclude_filters(query, exclude_filters):
+    """
+    Exclude songs matching any of the given (field, value) conditions.
+    Each exclusion is independent/AND-ed together: excluding artist=X and
+    maqam=Y removes songs matching EITHER, not only songs matching both.
+    """
+
+    if not exclude_filters:
+        return query
+
+    for search_filter in exclude_filters:
+        field, value = _read_field_value(search_filter)
+        condition = _build_filter_condition(field, value)
+        if condition is not None:
+            query = query.filter(~condition)
+
+    return query
+
+
 def hybrid_search_songs(
     db: Session,
     semantic_query: str,
@@ -304,6 +324,7 @@ def hybrid_search_songs(
     moods: list[str] | None = None,
     topics: list[str] | None = None,
     filter_groups: list | None = None,
+    exclude_filters: list | None = None,
     limit: int = 10,
 ):
     """
@@ -350,6 +371,11 @@ def hybrid_search_songs(
     query = apply_filter_groups(
         query,
         filter_groups,
+    )
+
+    query = apply_exclude_filters(
+        query,
+        exclude_filters,
     )
 
     # Retrieve a wider candidate pool before metadata re-ranking.

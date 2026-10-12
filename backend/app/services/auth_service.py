@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.services.email_service import send_verification_email
+from app.services.email_service import send_password_reset_email, send_verification_email
 
 from app.models.user import User
 from app.models.otp_verification import OTPVerification
@@ -202,3 +202,106 @@ def resend_verification_otp(db: Session, email: str):
     except Exception:
         db.rollback()
         raise
+
+
+PASSWORD_RESET_PURPOSE = "password_reset"
+PASSWORD_RESET_TTL_MINUTES = 15
+PASSWORD_RESET_COOLDOWN_SECONDS = 60
+
+
+def request_password_reset(db: Session, email: str) -> None:
+    """
+    Enumeration-resistant by design: this always "succeeds" from the
+    caller's point of view. An email is only actually sent if the account
+    exists, but that distinction is never revealed to the caller --
+    unlike /auth/resend-otp (which does reveal it), password reset is a
+    more commonly abused target for account enumeration, so it gets the
+    stricter treatment here.
+    """
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return
+
+    latest = (
+        db.query(OTPVerification)
+        .filter(
+            OTPVerification.user_id == user.id,
+            OTPVerification.purpose == PASSWORD_RESET_PURPOSE,
+        )
+        .order_by(OTPVerification.created_at.desc())
+        .first()
+    )
+
+    if latest and latest.created_at:
+        elapsed = datetime.now(timezone.utc) - latest.created_at
+        if elapsed.total_seconds() < PASSWORD_RESET_COOLDOWN_SECONDS:
+            return
+
+    try:
+        db.query(OTPVerification).filter(
+            OTPVerification.user_id == user.id,
+            OTPVerification.purpose == PASSWORD_RESET_PURPOSE,
+            OTPVerification.is_used == False,
+        ).update({"is_used": True}, synchronize_session=False)
+
+        otp = generate_otp()
+
+        db.add(OTPVerification(
+            user_id=user.id,
+            otp_hash=hash_otp(otp),
+            purpose=PASSWORD_RESET_PURPOSE,
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_TTL_MINUTES),
+            is_used=False,
+        ))
+
+        send_password_reset_email(to_email=user.email, otp=otp)
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+def reset_password(db: Session, email: str, otp: str, new_password: str):
+    """
+    Collapses every failure mode (unknown email, no active code, expired,
+    wrong code) into the same "invalid_or_expired" result -- deliberately
+    not distinguishing them, so this endpoint can't be used to enumerate
+    which emails have accounts either.
+    """
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return "invalid_or_expired"
+
+    otp_record = (
+        db.query(OTPVerification)
+        .filter(
+            OTPVerification.user_id == user.id,
+            OTPVerification.purpose == PASSWORD_RESET_PURPOSE,
+            OTPVerification.is_used == False,
+        )
+        .order_by(OTPVerification.created_at.desc())
+        .first()
+    )
+
+    if not otp_record:
+        return "invalid_or_expired"
+
+    if datetime.now(timezone.utc) > otp_record.expires_at:
+        return "invalid_or_expired"
+
+    if not verify_otp(otp, otp_record.otp_hash):
+        return "invalid_or_expired"
+
+    otp_record.is_used = True
+    user.password_hash = hash_password(new_password)
+
+    db.commit()
+    db.refresh(user)
+
+    return user

@@ -1,0 +1,1036 @@
+{
+  "summary": {
+    "label": "baseline",
+    "total_cases": 44,
+    "overall_pass_rate": 0.455,
+    "category_summary": {
+      "ambiguous_request": {
+        "passed": 1,
+        "total": 1,
+        "rate": 1.0
+      },
+      "artist_spelling_variant": {
+        "passed": 1,
+        "total": 4,
+        "rate": 0.25
+      },
+      "colloquial_query": {
+        "passed": 1,
+        "total": 1,
+        "rate": 1.0
+      },
+      "contradiction": {
+        "passed": 1,
+        "total": 1,
+        "rate": 1.0
+      },
+      "empty_result": {
+        "passed": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "follow_up": {
+        "passed": 0,
+        "total": 3,
+        "rate": 0.0
+      },
+      "hallucination_resistance": {
+        "passed": 3,
+        "total": 3,
+        "rate": 1.0
+      },
+      "hybrid_search": {
+        "passed": 1,
+        "total": 3,
+        "rate": 0.33
+      },
+      "maqam_spelling_variant": {
+        "passed": 1,
+        "total": 3,
+        "rate": 0.33
+      },
+      "multi_constraint": {
+        "passed": 1,
+        "total": 2,
+        "rate": 0.5
+      },
+      "music_theory": {
+        "passed": 0,
+        "total": 4,
+        "rate": 0.0
+      },
+      "negation": {
+        "passed": 0,
+        "total": 2,
+        "rate": 0.0
+      },
+      "result_count": {
+        "passed": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "semantic_search": {
+        "passed": 2,
+        "total": 4,
+        "rate": 0.5
+      },
+      "song_specific_question": {
+        "passed": 0,
+        "total": 1,
+        "rate": 0.0
+      },
+      "structured_search": {
+        "passed": 4,
+        "total": 8,
+        "rate": 0.5
+      }
+    },
+    "latency_mean_s": 2.806,
+    "latency_p50_s": 2.52,
+    "latency_p95_s": 6.24
+  },
+  "results": [
+    {
+      "id": "struct-artist-01",
+      "category": "structured_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني فيروز",
+          "error": null,
+          "latency_s": 8.804
+        }
+      ]
+    },
+    {
+      "id": "struct-artist-02",
+      "category": "structured_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            127,
+            130,
+            136
+          ],
+          "input": "أغنية لأم كلثوم",
+          "error": null,
+          "latency_s": 5.133
+        }
+      ]
+    },
+    {
+      "id": "struct-maqam-01",
+      "category": "structured_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني على مقام الحجاز",
+          "error": null,
+          "latency_s": 1.502
+        }
+      ]
+    },
+    {
+      "id": "struct-maqam-02",
+      "category": "structured_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            127,
+            137,
+            145
+          ],
+          "input": "أغاني على مقام نهاوند",
+          "error": null,
+          "latency_s": 4.737
+        }
+      ]
+    },
+    {
+      "id": "struct-maqam-03",
+      "category": "structured_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            141,
+            130
+          ],
+          "input": "أغاني مقام الصبا",
+          "error": null,
+          "latency_s": 3.183
+        }
+      ]
+    },
+    {
+      "id": "struct-difficulty-01",
+      "category": "structured_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني سهلة",
+          "error": null,
+          "latency_s": 1.629
+        }
+      ]
+    },
+    {
+      "id": "struct-combo-01",
+      "category": "structured_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            126
+          ],
+          "input": "أغنية لفيروز على مقام البياتي",
+          "error": null,
+          "latency_s": 3.152
+        }
+      ]
+    },
+    {
+      "id": "struct-combo-02",
+      "category": "structured_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "أغنية لمحمد عبد الوهاب على مقام الراست",
+          "error": null,
+          "latency_s": 3.512
+        }
+      ]
+    },
+    {
+      "id": "spelling-hamza-01",
+      "category": "artist_spelling_variant",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني ام كلثوم",
+          "error": null,
+          "latency_s": 3.467
+        }
+      ]
+    },
+    {
+      "id": "spelling-hamza-02",
+      "category": "artist_spelling_variant",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اغاني لإم كلثوم",
+          "error": null,
+          "latency_s": 3.42
+        }
+      ]
+    },
+    {
+      "id": "spelling-maqsura-01",
+      "category": "artist_spelling_variant",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            128
+          ],
+          "input": "اغاني عبد الحليم حافظ",
+          "error": null,
+          "latency_s": 6.24
+        }
+      ]
+    },
+    {
+      "id": "spelling-diacritics-01",
+      "category": "artist_spelling_variant",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "أَغَانِي فَيْرُوز",
+          "error": null,
+          "latency_s": 4.115
+        }
+      ]
+    },
+    {
+      "id": "spelling-maqam-variant-01",
+      "category": "maqam_spelling_variant",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            127,
+            137,
+            145
+          ],
+          "input": "أغاني على مقام نهاوند",
+          "error": null,
+          "latency_s": 6.052
+        }
+      ]
+    },
+    {
+      "id": "spelling-maqam-variant-02",
+      "category": "maqam_spelling_variant",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني على نهوند",
+          "error": null,
+          "latency_s": 3.405
+        }
+      ]
+    },
+    {
+      "id": "spelling-maqam-variant-03",
+      "category": "maqam_spelling_variant",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "عندك اغاني على مقام الراصت",
+          "error": null,
+          "latency_s": 3.331
+        }
+      ]
+    },
+    {
+      "id": "semantic-topic-01",
+      "category": "semantic_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "top1_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "بدي اغنية عن السفر",
+          "error": null,
+          "latency_s": 2.812
+        }
+      ]
+    },
+    {
+      "id": "semantic-topic-02",
+      "category": "semantic_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "top1_match": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            140,
+            127
+          ],
+          "input": "اعطيني اغنية عن الطفولة والذكريات",
+          "error": null,
+          "latency_s": 4.089
+        }
+      ]
+    },
+    {
+      "id": "semantic-mood-01",
+      "category": "semantic_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            130,
+            141
+          ],
+          "input": "بدي اغاني حزينة",
+          "error": null,
+          "latency_s": 3.732
+        }
+      ]
+    },
+    {
+      "id": "semantic-mood-02",
+      "category": "semantic_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [
+            134,
+            136,
+            139,
+            133,
+            130,
+            127,
+            143,
+            141,
+            135,
+            144
+          ],
+          "input": "اغاني هادئة ورومانسية",
+          "error": null,
+          "latency_s": 6.361
+        }
+      ]
+    },
+    {
+      "id": "semantic-colloquial-01",
+      "category": "colloquial_query",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "difficulty_match": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "بدي شي اغاني حزينة وسهلة اعزفها على العود",
+          "error": null,
+          "latency_s": 2.055
+        }
+      ]
+    },
+    {
+      "id": "hybrid-01",
+      "category": "hybrid_search",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": true,
+            "result_count_within_max": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            130
+          ],
+          "input": "اعطيني اغنية حزينة لأم كلثوم",
+          "error": null,
+          "latency_s": 2.646
+        }
+      ]
+    },
+    {
+      "id": "hybrid-02",
+      "category": "hybrid_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اغنية عن العودة لفيروز على مقام عجم",
+          "error": null,
+          "latency_s": 1.485
+        }
+      ]
+    },
+    {
+      "id": "hybrid-03",
+      "category": "hybrid_search",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "top1_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اغنية عن الحب والوفاء على مقام الراست",
+          "error": null,
+          "latency_s": 1.27
+        }
+      ]
+    },
+    {
+      "id": "multiconstraint-01",
+      "category": "multi_constraint",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني لفيروز أو أم كلثوم",
+          "error": null,
+          "latency_s": 1.662
+        }
+      ]
+    },
+    {
+      "id": "multiconstraint-02",
+      "category": "multi_constraint",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "result_count_within_max": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اقترح لي أغنيتين للملحن محمد عبد الوهاب أو لفيروز",
+          "error": null,
+          "latency_s": 2.109
+        }
+      ]
+    },
+    {
+      "id": "negation-01",
+      "category": "negation",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "artist_excluded": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [
+            136,
+            130,
+            141,
+            139,
+            134
+          ],
+          "input": "اعطيني اغاني عن الحب بس مش لأم كلثوم",
+          "error": null,
+          "latency_s": 4.335
+        }
+      ]
+    },
+    {
+      "id": "negation-02",
+      "category": "negation",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "artist_excluded": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "أغاني على مقام الحجاز لكن ليس لصباح فخري",
+          "error": null,
+          "latency_s": 1.728
+        }
+      ]
+    },
+    {
+      "id": "theory-01",
+      "category": "music_theory",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "شو الفرق بين الصبا والبياتي؟",
+          "error": null,
+          "latency_s": 0.953
+        }
+      ]
+    },
+    {
+      "id": "theory-02",
+      "category": "music_theory",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "شو هو جنس الحجاز؟",
+          "error": null,
+          "latency_s": 1.197
+        }
+      ]
+    },
+    {
+      "id": "theory-03",
+      "category": "music_theory",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اشرحلي سلم مقام الراست",
+          "error": null,
+          "latency_s": 1.152
+        }
+      ]
+    },
+    {
+      "id": "theory-04",
+      "category": "music_theory",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "ما هو غماز مقام الصبا؟",
+          "error": null,
+          "latency_s": 1.255
+        }
+      ]
+    },
+    {
+      "id": "song-question-01",
+      "category": "song_specific_question",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [
+            144,
+            126,
+            132
+          ],
+          "input": "شو مقام اغنية حنين إلى الوطن؟",
+          "error": null,
+          "latency_s": 2.92
+        }
+      ]
+    },
+    {
+      "id": "followup-01",
+      "category": "follow_up",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغاني على مقام الراست",
+          "error": null,
+          "latency_s": 1.459
+        },
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "من هالاغاني، اختار الأسهل",
+          "error": null,
+          "latency_s": 1.235
+        }
+      ]
+    },
+    {
+      "id": "followup-02",
+      "category": "follow_up",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "exact_song_set": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [],
+          "input": "اعطيني اغنية لفيروز على مقام نهاوند",
+          "error": null,
+          "latency_s": 1.392
+        },
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": false,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [
+            131,
+            133,
+            135,
+            142,
+            139,
+            143
+          ],
+          "input": "طيب اقترح علي اغنية بعدها تكون بنفس المقام",
+          "error": null,
+          "latency_s": 4.238
+        }
+      ]
+    },
+    {
+      "id": "followup-03",
+      "category": "follow_up",
+      "passed": false,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "subset_and_nonempty": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            141
+          ],
+          "input": "اعطيني اغاني حزينة لعبد الحليم حافظ",
+          "error": null,
+          "latency_s": 3.031
+        },
+        {
+          "checks": {
+            "ran_without_error": true,
+            "intent_match": false,
+            "no_hallucinated_titles": true
+          },
+          "passed": false,
+          "found_ids": [
+            126,
+            128,
+            129
+          ],
+          "input": "و شو مقام اول اغنية منهم؟",
+          "error": null,
+          "latency_s": 2.878
+        }
+      ]
+    },
+    {
+      "id": "hallucination-01",
+      "category": "hallucination_resistance",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغنية لمارسيل خليفة",
+          "error": null,
+          "latency_s": 1.541
+        }
+      ]
+    },
+    {
+      "id": "hallucination-02",
+      "category": "hallucination_resistance",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغنية على مقام السيكاه",
+          "error": null,
+          "latency_s": 1.2
+        }
+      ]
+    },
+    {
+      "id": "hallucination-03",
+      "category": "hallucination_resistance",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغنية لفيروز من سنة 1999",
+          "error": null,
+          "latency_s": 1.244
+        }
+      ]
+    },
+    {
+      "id": "empty-result-01",
+      "category": "empty_result",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغاني صعبة لصباح فخري على مقام الراست",
+          "error": null,
+          "latency_s": 1.392
+        }
+      ]
+    },
+    {
+      "id": "empty-result-02",
+      "category": "empty_result",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اغاني لفيروز صعبة جدا على مقام الكرد",
+          "error": null,
+          "latency_s": 1.395
+        }
+      ]
+    },
+    {
+      "id": "contradiction-01",
+      "category": "contradiction",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "is_empty_as_expected": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغاني لأم كلثوم بس مش لأم كلثوم",
+          "error": null,
+          "latency_s": 1.235
+        }
+      ]
+    },
+    {
+      "id": "result-count-01",
+      "category": "result_count",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "result_count_within_max": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            137
+          ],
+          "input": "أغنية واحدة لفيروز",
+          "error": null,
+          "latency_s": 2.52
+        }
+      ]
+    },
+    {
+      "id": "result-count-02",
+      "category": "result_count",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "result_count_within_max": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [],
+          "input": "اعطيني اغنيتين على مقام البياتي",
+          "error": null,
+          "latency_s": 1.191
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-01",
+      "category": "ambiguous_request",
+      "passed": true,
+      "turns": [
+        {
+          "checks": {
+            "ran_without_error": true,
+            "no_crash": true,
+            "no_hallucinated_titles": true
+          },
+          "passed": true,
+          "found_ids": [
+            129
+          ],
+          "input": "اعطيني شي حلو",
+          "error": null,
+          "latency_s": 2.512
+        }
+      ]
+    }
+  ]
+}

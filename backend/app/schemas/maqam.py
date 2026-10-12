@@ -7,6 +7,16 @@ from app.schemas.ajnas import JinsResponse
 MAX_SCALE_INTERVAL = 4.0
 
 
+class MaqamJinsResponse(BaseModel):
+    start_degree: int
+    is_primary_alternative: bool
+    jins: JinsResponse
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class MaqamCreate(BaseModel):
     name_ar: str
     name_en: Optional[str] = None
@@ -15,6 +25,7 @@ class MaqamCreate(BaseModel):
     accidentals: Optional[str] = None
 
     scale_pattern: Optional[list[float]] = None
+    degree_names: Optional[list[str]] = None
 
     root_jins_id: Optional[int] = None
     branch_jins_id: Optional[int] = None
@@ -22,7 +33,7 @@ class MaqamCreate(BaseModel):
     ghammaz: Optional[str] = None
     mood: Optional[str] = None
 
-    notation_format: Literal["musicxml"] = "musicxml"
+    notation_format: Literal["musicxml", "scale_pattern_v1"] = "musicxml"
 
     musicxml_data: Optional[str] = None
     audio_sample_url: Optional[str] = None
@@ -67,6 +78,7 @@ class MaqamResponse(BaseModel):
     accidentals: Optional[str] = None
 
     scale_pattern: Optional[list[float]] = None
+    degree_names: Optional[list[str]] = None
 
     root_jins_id: Optional[int] = None
     branch_jins_id: Optional[int] = None
@@ -83,6 +95,8 @@ class MaqamResponse(BaseModel):
 
     description: Optional[str] = None
     notes: Optional[str] = None
+
+    ajnas_breakdown: list[MaqamJinsResponse] = []
 
     class Config:
         from_attributes = True

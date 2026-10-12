@@ -92,3 +92,7 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now()
     )
+
+    @property
+    def google_linked(self) -> bool:
+        return self.google_id is not None
